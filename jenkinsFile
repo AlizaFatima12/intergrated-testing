@@ -6,6 +6,8 @@ pipeline {
         IMAGE      = "task-app:${BUILD_NUMBER}"
         ZAP_HOME   = "C:\\tools\\ZAP"
         JMETER_HOME= "C:\\tools\\jmeter"
+        PYTHON_EXE  = "C:\\Users\\DELL\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+        NEWMAN_EXE  = "C:\\Users\\DELL\\AppData\\Roaming\\npm\\newman.cmd"
     }
     stages {
 
@@ -33,8 +35,8 @@ pipeline {
 
         stage('Postman — API Validation') {
             steps {
-                bat "newman run tests/postman_collection.json -e tests/postman_env.json --reporters cli,html --reporter-html-export reports/postman_report.html"
-            }
+                bat "\"%NEWMAN_EXE%\" run tests\\postman_collection.json -e tests\\postman_env.json --reporters cli,html --reporter-html-export reports\\postman_report.html"
+                }
             post {
                 always { publishHTML(target: [reportDir: 'reports', reportFiles: 'postman_report.html', reportName: 'Postman Report']) }
             }
