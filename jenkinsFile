@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+    environment {
+        APP_PORT   = "5000"
+        CONTAINER  = "task-app-ci"
+        IMAGE      = "task-app:${BUILD_NUMBER}"
+        ZAP_HOME   = "C:\\tools\\ZAP"
+        JMETER_HOME= "C:\\tools\\jmeter"
+    }
+    stages {
+
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+
+        stage('Docker Build & Deploy') {
+            steps {
+                bat "docker build -t %IMAGE% ."
+                bat "docker rm -f %CONTAINER% || exit 0"
+                bat "docker run -d -p %APP_PORT%:5000 --name %CONTAINER% %IMAGE%"
+                bat "ping -n 5 127.0.0.1 > nul"  // wait 4 seconds for app to start
+            }
+        }
+
+        stage('Selenium — Functional') {
+            steps {
+                bat "python tests/selenium_test.py http://localhost:%APP_PORT%"
+            }
+            post {
+                always { echo 'Selenium stage complete' }
+            }
+        }
+
+        stage('Postman — API Validation') {
+            steps {
+                bat "newman run tests/postman_collection.json -e tests/postman_env.json --reporters cli,html --reporter-html-export reports/postman_report.html"
+            }
+            post {
+                always { publishHTML(target: [reportDir: 'reports', reportFiles: 'postman_report.html', reportName: 'Postman Report']) }
+            }
+        }
+
+        stage('JMeter — Performance') {
+            steps {
+                bat "%JMETER_HOME%\\bin\\jmeter.bat -n -t tests/jmeter_plan.jmx -l reports/jmeter_results.jtl -e -o reports/jmeter_html"
+            }
+            post {
+                always { publishHTML(target: [reportDir: 'reports/jmeter_html', reportFiles: 'index.html', reportName: 'JMeter Report']) }
+            }
+        }
+
+        stage('ZAP — Security Scan') {
+            steps {
+                bat "\"%ZAP_HOME%\\zap.bat\" -cmd -quickurl http://localhost:%APP_PORT% -quickprogress -quickout reports/zap_report.html"
+            }
+            post {
+                always { publishHTML(target: [reportDir: 'reports', reportFiles: 'zap_report.html', reportName: 'ZAP Security Report']) }
+            }
+        }
+    }
+
+    post {
+        always {
+            bat "docker stop %CONTAINER% || exit 0"
+            bat "docker rm %CONTAINER% || exit 0"
+            bat "docker rmi %IMAGE% || exit 0"
+        }
+        failure { echo 'Pipeline FAILED — check stage reports above.' }
+        success { echo 'All stages passed — application is deployable.' }
+    }
+}
