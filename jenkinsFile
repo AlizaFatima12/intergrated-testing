@@ -24,7 +24,7 @@ pipeline {
 
         stage('Selenium — Functional') {
             steps {
-                bat "python tests/selenium_test.py http://localhost:%APP_PORT%"
+                bat "\"C:\\Users\\DELL\\AppData\\Local\\Programs\\Python\\Python313\\python.exe\" tests\\selenium_test.py http://localhost:%APP_PORT%"
             }
             post {
                 always { echo 'Selenium stage complete' }
