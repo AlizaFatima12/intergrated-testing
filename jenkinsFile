@@ -5,7 +5,7 @@ pipeline {
         CONTAINER  = "task-app-ci"
         IMAGE      = "task-app:${BUILD_NUMBER}"
         ZAP_HOME   = "C:\\Program Files\\ZAP\\Zed Attack Proxy"
-        JMETER_HOME= "C:\Users\DELL\Downloads\apache-jmeter-5.6.3\apache-jmeter-5.6.3"
+        JMETER_HOME= "C:\\Users\\DELL\\Downloads\\apache-jmeter-5.6.3\\apache-jmeter-5.6.3"
         PYTHON_EXE  = "C:\\Users\\DELL\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
         NEWMAN_EXE  = "C:\\Users\\DELL\\AppData\\Roaming\\npm\\newman.cmd"
     }
